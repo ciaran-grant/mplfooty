@@ -2,9 +2,9 @@ import numpy as np
 from matplotlib import patches
 from matplotlib.lines import Line2D
 
-from afl_plots.pitch_plot import BasePitchPlot
+from mplfooty.pitch_plot import BasePitchPlot
 
-class AFLPitch(BasePitchPlot):
+class Pitch(BasePitchPlot):
     
     def _scale_pad(self):
         self.pad_left = self.pad_left * self.dim.aspect

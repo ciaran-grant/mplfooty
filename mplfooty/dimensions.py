@@ -32,6 +32,7 @@ class BaseDims:
         self.inside_50_angle()
     
     def boundary_widths(self):
+        """ Creates boundary width from pitch and behind posts. """
         
         self.boundary_width = self.pitch_width - self.behind_top*2
             
@@ -98,14 +99,19 @@ def afl_dims(pitch_width, pitch_length):
 def create_pitch_dims(pitch_width, pitch_length):
     """ Create pitch dimensions.
 
-    Args:
-        pitch_width (float): Pitch width in metres.
-        pitch_length (float): Pitch length in metres.
-    
-    Output:
-        (dataclass): Dataclass holding pitch dimensions.
+    Parameters
+    ----------
+    pitch_width : float
+        Pitch width in metres.
+    pitch_length : float
+        Pitch length in metres.
+
+    Returns
+    -------
+    dataclass
+        Dataclass holding pitch dimensions.
     """
-    
+
     return afl_dims(pitch_width, pitch_length)
     
     

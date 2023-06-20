@@ -1,3 +1,5 @@
+""" Base class for drawing the AFL pitch. """
+
 import warnings
 from abc import ABC, abstractmethod
 
@@ -6,15 +8,49 @@ from matplotlib.patches import Ellipse, Arc
 from matplotlib import rcParams
 import numpy as np
 
-from afl_plots.dimensions import create_pitch_dims
+from mplfooty.dimensions import create_pitch_dims
 
 class BasePitch(ABC):
     """ A class for plotting AFL pitches in Matplotlib
 
     Parameters
     ----------
-        
-    """
+    half : bool, default False
+        Whether to display half of the pitch.
+    pitch_color : any Matplotlib color, default None
+        The background color for each Matplotlib axis.
+         If None, defaults to rcParams["axes.facecolor"].
+        To remove the background set to "None" or 'None'.
+    line_color : any Matplotlib color, default None
+        The line color for the pitch markings. If None, defaults to rcParams["grid.color"].
+    line_alpha : float, default 1
+        The transparency of the pitch and the markings.
+    linewidth : float, default 2
+        The line width for the pitch markings.
+    linestyle : str or typle
+        Linestyle for the pitch lines:
+        {'-', '--', '-.', ':', '', (offset, on-off-seq), ...}
+        see: https://matplotlib.org/stable/gallery/lines_bars_and_markers/linestyles.html
+    line_zorder : float, default 0.9
+        Set the zorder for the pitch lines (a matplotlib artist).
+        Artists with lower zorder values are drawn first.
+    pad_left, pad_right : float, default 20
+        Adjusts the left xlim of the axis. Positive values increase the plot area,
+        while negative values decrease the plot area.
+    pad_bottom, pad_top : float, default 20
+        Adjusts the bottom ylim of the axis. Positive values increase the plot area,
+        while negative values decrease the plot area.
+    pitch_length : float, default None
+        The pitch length in meters.
+    pitch_width : float, default None
+        The pitch width in meters. 
+    axis : bool, default False
+        Whether to set the axis spines to visible.
+    label : bool, default False
+        Whether to include the axis labels.
+    tick : bool, default False
+        Whether to include the axis ticks.
+    """ 
     
     def __init__(self, 
                  half=False,
@@ -66,9 +102,6 @@ class BasePitch(ABC):
         self.hexbin_gridsize = None
         self.hex_extent = None
         
-        # data checks
-        # self._validation_checks()
-        
         # Pitch Dimensions
         self.dim = create_pitch_dims(self.pitch_width, self.pitch_length)
         
@@ -84,15 +117,13 @@ class BasePitch(ABC):
         self.behind_right = np.array([[self.dim.right, self.dim.behind_bottom],
                                    [self.dim.right, self.dim.behind_top]])     
         
-        # # Padding
-        # for pad in ['pad_left', 'pad_right', 'pad_bottom', 'pad_top']:
-        #     if getattr(self, pad) is None:
-        #         setattr(self, pad, 4)
-        
         # Set extent
         self._set_extent()
         
-        # validate padding
+        # data checks (to be added)
+        # self._validation_checks()
+        
+        # validate padding (to be added)
         # self._validate_pad()
         
         # Line Properties
@@ -113,8 +144,7 @@ class BasePitch(ABC):
         self.ellipse_properties = {'fill': False, 'linewidth':self.line_width, 'alpha':self.line_alpha,
                                    'color':self.line_colour, 'zorder':self.line_zorder,
                                    'linestyle':self.linestyle}
-
-        
+ 
     # def _validation_checks(self):
         
     #     # pitch validation
@@ -126,20 +156,42 @@ class BasePitch(ABC):
         
     # def _validate_pad(self):
     #     # make sure padding not too large for pitch
-    #     return
-        
-    
+    #     return    
     
     def draw(self, ax=None, figsize=None, nrows=1, ncols=1, tight_layout=True, constrained_layout=False):
-        """ Draw the specified AFL pitch(es). Can draw on existing axes.
-
-        Args:
-            ax (_type_, optional): _description_. Defaults to None.
-            figsize (_type_, optional): _description_. Defaults to None.
-            nrows (int, optional): _description_. Defaults to 1.
-            ncols (int, optional): _description_. Defaults to 1.
-            tight_layout (bool, optional): _description_. Defaults to True.
-            constrained_layout (bool, optional): _description_. Defaults to False.
+        """ Draws the specified AFL pitch(es).
+        If an ax is specified the pitch is drawn on an existing axis.
+        
+        Parameters
+        ----------
+        ax : matplotlib axis, default None
+            A matplotlib.axes.Axes to draw the pitch on.
+            If None is specified the pitch is plotted on a new figure.
+        figsize : tuple of float, default Matplotlib figure size
+            The figure size in inches by default uses rcParams["figure.figsize"].
+        nrows, ncols : int, default 1
+            Number of rows/columns of the subplot grid.
+        tight_layout : bool, default True
+            Whether to use Matplotlib's tight layout.
+        constrained_layout : bool, default False
+            Whether to use Matplotlib's constrained layout.
+            
+        Returns
+        -------
+        If ax=None returns a matplotlib Figure and Axes.
+        Else plotted on an existing axis and returns None.
+        
+        Examples
+        --------
+        >>> from afl_plots import Pitch
+        >>> pitch = Pitch()
+        >>> fig, ax = pitch.draw()
+        
+        >>> from afl_plots import Pitch
+        >>> import matplotlib.pyplot as plt
+        >>> fig, ax = plt.subplots()
+        >>> pitch = Pitch()
+        >>> pitch.draw(ax=ax)
         """
         
         if figsize is None:
@@ -165,7 +217,35 @@ class BasePitch(ABC):
             
         return fig, axs
     
+    @staticmethod
+    def set_visible(ax, spine_bottom=False, spine_top=False, spine_left=False, spine_right=False,
+                    grid=False, tick=False, label=False):
+        """ Helper method to set visibility of matplotlib spines, grid, ticks. Set to invisible by default.
+
+        Args:
+            ax (_type_): _description_
+            spine_bottom (bool, optional): _description_. Defaults to False.
+            spine_top (bool, optional): _description_. Defaults to False.
+            spine_left (bool, optional): _description_. Defaults to False.
+            spine_right (bool, optional): _description_. Defaults to False.
+            grid (bool, optional): _description_. Defaults to False.
+            tick (bool, optional): _description_. Defaults to False.
+            label (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """
+        
+        ax.spines['bottom'].set_visible(spine_bottom)
+        ax.spines['top'].set_visible(spine_top)
+        ax.spines['left'].set_visible(spine_left)
+        ax.spines['right'].set_visible(spine_right)
+        ax.grid(grid)
+        ax.tick_params(bottom=tick, top=tick, left=tick, right=tick,
+                       labelbottom=label, labeltop=label, labelleft=label, labelright=label)
+    
     def _draw_ax(self, ax):
+        """ Defines the axes and draw AFL pitch markings & goals. """
         self._set_axes(ax)
         self._draw_pitch_markings(ax)
         self._draw_goals(ax)
@@ -181,7 +261,7 @@ class BasePitch(ABC):
         ax.set_aspect(self.dim.aspect)
                
     def _draw_pitch_markings(self, ax):
-        
+        """ Draw all lines on the pitch. """
         self._draw_boundary(ax)
         self._draw_centre(ax)
         self._draw_inside_50(ax)
@@ -319,28 +399,64 @@ class BasePitch(ABC):
     def grid(self, figheight=9, nrows=1, ncols=2, grid_height=0.715, grid_width=0.95, space = 0.05,
              left =None, bottom = None, endnote_height = 0.065, endnote_space = 0.01,
              title_height = 0.15, title_space=0.01, axis=True):
-        """Helper to create a grid of pitches in a specified location.
-
-        Args:
-            figheight (int, optional): _description_. Defaults to 9.
-            nrows (int, optional): _description_. Defaults to 1.
-            ncols (int, optional): _description_. Defaults to 2.
-            grid_height (float, optional): _description_. Defaults to 0.715.
-            grid_width (float, optional): _description_. Defaults to 0.95.
-            space (float, optional): _description_. Defaults to 0.05.
-            left (_type_, optional): _description_. Defaults to None.
-            bottom (_type_, optional): _description_. Defaults to None.
-            endnote_height (float, optional): _description_. Defaults to 0.065.
-            endnote_space (float, optional): _description_. Defaults to 0.01.
-            title_height (float, optional): _description_. Defaults to 0.15.
-            title_space (float, optional): _description_. Defaults to 0.01.
-            axis (bool, optional): _description_. Defaults to True.
-            
-        Returns:
-            fig (matplotlib.figure.Figure): figure
-            axs (dict[label, Axs]): A dictionary mapping the laels to the Axes objects - ['pitch', 'title', 'endnote]
-        """
+        """ A helper to create a grid of pitches in a specified location.
         
+        Parameters
+        ----------
+        figheight : float, default 9
+            The figure height in inches.
+        nrows, ncols : int, default 1
+            Number of rows/columns of pitches in the grid.
+        grid_height : float, default 0.715
+            The height of the pitch grid in fractions of the figure height.
+            The default is the grid height is 71.5% of the figure height.
+        grid_width : float, default 0.95
+            The width of the pitch grid in fractions of the figure width.
+            The default is the grid is 95% of the figure width.
+        space : float, default 0.05
+            The total amount of the grid height reserved for spacing between the pitch axes.
+            Expressed as a fraction of the grid_height. The default is 5% of the grid height.
+            The spacing across the grid width is automatically calculated to maintain even spacing.
+        left : float, default None
+            The location of the left-hand side of the axes in fractions of the figure width.
+            The default of None places the axes in the middle of the figure.
+        bottom : float, default None
+            The location of the bottom endnote axes in fractions of the figure height.
+            The default of None places the axes in the middle of the figure.
+            If the endnote_height=0 then the pitch grid is located at the bottom coordinate instead.
+        endnote_height: float, default 0.065
+            The height of the endnote axes in fractions of the figure height.
+            The default is the endnote is 6.5% of the figure height.
+            If endnote_height=0, then the endnote axes is not plotted.
+        endnote_space : float, default 0.01
+            The space between the pitch grid and endnote axis in fractions of the figure height.
+            The default space is 1% of the figure height.
+            If endnote_height=0, then the endnote_space is set to zero.
+        title_height : float, default 0.15
+            The height of the title axis in fractions of the figure height.
+            The default is the title axis is 15% of the figure height.
+            If title_height=0, then the title axes is not plotted.
+        title_space : float, default 0.01
+            The space between the pitch grid and title axis in fractions of the figure height.
+            The default space is 1% of the figure height.
+            If title_height=0, then the title_space is set to zero.
+        axis : bool, default True
+            Whether the endnote and title axes are 'on'.
+            
+        Returns
+        -------
+        fig : matplotlib.figure.Figure
+        axs : dict[label, Axes]
+            A dictionary mapping the labels to the Axes objects.
+            The possible keys are 'pitch', 'title', and 'endnote'.
+        
+        Examples
+        --------
+        >>> from afl_plots import Pitch
+        >>> pitch = Pitch()
+        >>> fig, axs = pitch.grid(nrows=3, ncols=3, grid_height=0.7, figheight=14)
+        """
+   
         dim = self._grid_dimensions(ax_aspect=self.ax_aspect, figheight=figheight, nrows=nrows, ncols=ncols, 
                                     grid_height=grid_height, grid_width=grid_width, space=space, left=left, bottom=bottom,
                                     endnote_height=endnote_height, endnote_space=endnote_space, title_height=title_height, 
@@ -360,28 +476,56 @@ class BasePitch(ABC):
         
         return fig, axs
     
-    @staticmethod
     def _grid_dimensions(self, ax_aspect=1, figheight=9, nrows=1, ncols=1, grid_height=0.715, grid_width=0.95, space=0.05,
                          left=None, bottom=None, endnote_height=0, endnote_space=0.01, title_height=0, title_space=0.01):
         """ A helper to calculate the grid dimensions.
-
-        Args:
-            ax_aspect (int, optional): _description_. Defaults to 1.
-            figheight (int, optional): _description_. Defaults to 9.
-            nrows (int, optional): _description_. Defaults to 1.
-            ncols (int, optional): _description_. Defaults to 1.
-            grid_height (float, optional): _description_. Defaults to 0.715.
-            grid_width (float, optional): _description_. Defaults to 0.95.
-            space (float, optional): _description_. Defaults to 0.05.
-            left (_type_, optional): _description_. Defaults to None.
-            bottom (_type_, optional): _description_. Defaults to None.
-            endnote_height (int, optional): _description_. Defaults to 0.
-            endnote_space (float, optional): _description_. Defaults to 0.01.
-            title_height (int, optional): _description_. Defaults to 0.
-            title_space (float, optional): _description_. Defaults to 0.01.
-
-        Returns:
-            dimensions (dict[dimension, value]): A dictionary holding the axes and figure dimensions.
+        
+        Parameters
+        ----------
+        ax_aspect : float, default 1
+            The aspect ratio of the grid's axis (width divided by height).
+        figheight : float, default 9
+            The figure height in inches.
+        nrows, ncols : int, default 1
+            Number of rows/columns of axes in the grid.
+        grid_height : float, default 0.715
+            The height of the grid in fractions of the figure height.
+            The default is the grid height is 71.5% of the figure height.
+        grid_width : float, default 0.95
+            The width of the grid in fractions of the figure width.
+            The default is the grid is 95% of the figure width.
+        space : float, default 0.05
+            The total amount of the grid height reserved for spacing between the grid axes.
+            Expressed as a fraction of the grid_height. The default is 5% of the grid height.
+            The spacing across the grid width is automatically calculated to maintain even spacing.
+        left : float, default None
+            The location of the left-hand side of the axes in fractions of the figure width.
+            The default of None places the axes in the middle of the figure.
+        bottom : float, default None
+            The location of the bottom endnote axes in fractions of the figure height.
+            The default of None places the axes in the middle of the figure.
+            If the endnote_height=0 then the grid is located at the bottom coordinate instead.
+        endnote_height: float, default 0
+            The height of the endnote axes in fractions of the figure height.
+            For, example 0.07 means the endnote axis is 7% of the figure height.
+            If endnote_height=0 (default), then the endnote axes is not plotted.
+        endnote_space : float, default 0.01
+            The space between the grid and endnote axis in fractions of the figure height.
+            The default space is 1% of the figure height.
+            If endnote_height=0, then the endnote_space is set to zero.
+        title_height : float, default 0
+            The height of the title axis in fractions of the figure height.
+            For, example 0.15 means the title axis is 15% of the figure height.
+            If title_height=0 (default), then the title axes is not plotted.
+        title_space : float, default 0.01
+            The space between the grid and title axis in fractions of the figure height.
+            The default space is 1% of the figure height.
+            If title_height=0, then the title_space is set to zero.
+            
+        Returns
+        -------
+        dimensions : dict[dimension, value]
+            A dictionary holding the axes and figure dimensions.
         """
         
         # dictionary for holding dimensions
@@ -527,35 +671,7 @@ class BasePitch(ABC):
         if dims['title_height'] == 0 and dims['endnote_height'] == 0:
             return fig, result_axes[grid_key]  # no dictionary if just grid
         return fig, result_axes  # else dictionary
-
     
-    # def jointgrid(self, figheight=9, left=None, grid_width=0.95, bottom=None, 
-    #               endnote_height=0.065, endnote_space = 0.01, grid_height=0.715, title_space = 0.01,
-    #               title_height = 0.15,
-    #               space=0, marginal=0.1,
-    #               ax_left=True, ax_top = True, ax_right = True, ax_bottom = False,
-    #               axis=True):
-    #     """ Create a grid with a pitch at the center and (marginal) axes at sides,
-
-    #     Args:
-    #         figheight (int, optional): _description_. Defaults to 9.
-    #         left (_type_, optional): _description_. Defaults to None.
-    #         grid_width (float, optional): _description_. Defaults to 0.95.
-    #         bottom (_type_, optional): _description_. Defaults to None.
-    #         endnote_height (float, optional): _description_. Defaults to 0.065.
-    #         endnote_space (float, optional): _description_. Defaults to 0.01.
-    #         grid_height (float, optional): _description_. Defaults to 0.715.
-    #         title_space (float, optional): _description_. Defaults to 0.01.
-    #         title_height (float, optional): _description_. Defaults to 0.15.
-    #         space (int, optional): _description_. Defaults to 0.
-    #         marginal (float, optional): _description_. Defaults to 0.1.
-    #         ax_left (bool, optional): _description_. Defaults to True.
-    #         ax_top (bool, optional): _description_. Defaults to True.
-    #         ax_right (bool, optional): _description_. Defaults to True.
-    #         ax_bottom (bool, optional): _description_. Defaults to False.
-    #         axis (bool, optional): _description_. Defaults to True.
-    #     """
-        
         
     ## Abstract methods for drawing attributes - defined in Pitch/VerticalPitch)
     
@@ -602,52 +718,52 @@ class BasePitch(ABC):
     def plot(self, x, y, ax=None, **kwargs):
         """ Implement a wrapper for matplotlib.axes.Axes.plot. """
     
-    # @abstractmethod
-    # def scatter(self, x, y, rotation_degrees=None, marker=None, ax=None, **kwargs):
-    #     """ Implement a wrapper for matplotlib.axes.Axes.scatter. """
+    @abstractmethod
+    def scatter(self, x, y, rotation_degrees=None, marker=None, ax=None, **kwargs):
+        """ Implement a wrapper for matplotlib.axes.Axes.scatter. """
     
-    # @abstractmethod
-    # def _reflect_2d(self, x, y, standardised=False):
-    #     """ Implement a method to reflect points in pitch sides. """
+    @abstractmethod
+    def _reflect_2d(self, x, y, standardised=False):
+        """ Implement a method to reflect points in pitch sides. """
         
-    # @abstractmethod
-    # def kdeplot(self, x, y, ax=None, **kwargs):
-    #     """ Implement a wrapper for seaborn.kdeplot. """
+    @abstractmethod
+    def kdeplot(self, x, y, ax=None, **kwargs):
+        """ Implement a wrapper for seaborn.kdeplot. """
         
-    # @abstractmethod
-    # def hexbin(self, x, y, ax=None, **kwargs):
-    #     """ Implement a wrapper for matplotlib.axes.Axes.hexbin. """
+    @abstractmethod
+    def hexbin(self, x, y, ax=None, **kwargs):
+        """ Implement a wrapper for matplotlib.axes.Axes.hexbin. """
         
-    # @abstractmethod
-    # def polygon(self, x, y, ax=None, **kwargs):
-    #     """ Implement a method to add polygons to the pitch. """
+    @abstractmethod
+    def polygon(self, x, y, ax=None, **kwargs):
+        """ Implement a method to add polygons to the pitch. """
         
-    # @abstractmethod
-    # def goal_angle(self, x, y, ax=None, goal="right", **kwargs):
-    #     """ Implement a method to plot a triangle between a point and goal posts / behind posts. """
+    @abstractmethod
+    def goal_angle(self, x, y, ax=None, goal="right", **kwargs):
+        """ Implement a method to plot a triangle between a point and goal posts / behind posts. """
         
-    # @abstractmethod
-    # def annotate(self, text, xy, xytext=None, ax=None, **kwargs):
-    #     """ Implement a wrapper for matplotlib.axes.Axes.annotate. """
+    @abstractmethod
+    def annotate(self, text, xy, xytext=None, ax=None, **kwargs):
+        """ Implement a wrapper for matplotlib.axes.Axes.annotate. """
         
-    # @abstractmethod
-    # def bin_statistic(self, x, y, values=None, statistic="count", bins=(5,4), 
-    #                   normalize=False, standardized=False):
-    #     """ Calculate 2d binned statistics for arbitrarily shaped bins. """
+    @abstractmethod
+    def bin_statistic(self, x, y, values=None, statistic="count", bins=(5,4), 
+                      normalize=False, standardized=False):
+        """ Calculate 2d binned statistics for arbitrarily shaped bins. """
         
-    # @abstractmethod
-    # def heatmap(self, x, y, ax=None, **kwargs):
-    #     """ Implement drawing heatmaps for arbitrarily shaped bins. """
+    @abstractmethod
+    def heatmap(self, x, y, ax=None, **kwargs):
+        """ Implement drawing heatmaps for arbitrarily shaped bins. """
         
-    # @abstractmethod
-    # def flow(self, xstart, ystart, xend, yend, bins=(5,4),
-    #          arrow_type='same', arrow_length=5, color=None, ax=None, **kwargs):
-    #     """ Implement a flow diagram with arrows showing average direction and
-    #         a heatmap showing counts in each bin """
+    @abstractmethod
+    def flow(self, xstart, ystart, xend, yend, bins=(5,4),
+             arrow_type='same', arrow_length=5, color=None, ax=None, **kwargs):
+        """ Implement a flow diagram with arrows showing average direction and
+            a heatmap showing counts in each bin """
         
-    # @abstractmethod
-    # def arrows(self, xstart, ystart, xend, yend, *args, ax=None, **kwargs):
-    #     """ Implement a method to plot arrows. """
+    @abstractmethod
+    def arrows(self, xstart, ystart, xend, yend, *args, ax=None, **kwargs):
+        """ Implement a method to plot arrows. """
     
     # @abstractmethod
     # def lines(self, xstart, ystart, xend, yend, color=None, n_segments=100,
@@ -655,78 +771,18 @@ class BasePitch(ABC):
     #           cmap=None, ax=None, **kwargs):
     #     """ Implement method to plot lines. """
     
-    # @abstractmethod
-    # def convexhull(self, x, y):
-    #     """ calculate a Convex Hull from a set of coordinates. """  
+    @abstractmethod
+    def convexhull(self, x, y):
+        """ calculate a Convex Hull from a set of coordinates. """  
         
-    # @abstractmethod
-    # def voronoi(self, x, y, teams):
-    #     """ Calculate the Voronoi polygons for each team. """ 
+    @abstractmethod
+    def voronoi(self, x, y, teams):
+        """ Calculate the Voronoi polygons for each team. """ 
     
-    # @abstractmethod
-    # def calculate_angle_and_distance(self, xstart, ystart, xend, yend, standardized=False, degrees=False):
-    #     """ Calculate the angle and distance from a start and end location. """
+    @abstractmethod
+    def calculate_angle_and_distance(self, xstart, ystart, xend, yend, standardized=False, degrees=False):
+        """ Calculate the angle and distance from a start and end location. """
     
     
-    ## Setting axes visibility
-    @staticmethod
-    def set_visible(ax, spine_bottom=False, spine_top=False, spine_left=False, spine_right=False,
-                    grid=False, tick=False, label=False):
-        """ Helper method to set visibility of matplotlib spines, grid, ticks. Set to invisible by default.
-
-        Args:
-            ax (_type_): _description_
-            spine_bottom (bool, optional): _description_. Defaults to False.
-            spine_top (bool, optional): _description_. Defaults to False.
-            spine_left (bool, optional): _description_. Defaults to False.
-            spine_right (bool, optional): _description_. Defaults to False.
-            grid (bool, optional): _description_. Defaults to False.
-            tick (bool, optional): _description_. Defaults to False.
-            label (bool, optional): _description_. Defaults to False.
-
-        Returns:
-            _type_: _description_
-        """
-        
-        ax.spines['bottom'].set_visible(spine_bottom)
-        ax.spines['top'].set_visible(spine_top)
-        ax.spines['left'].set_visible(spine_left)
-        ax.spines['right'].set_visible(spine_right)
-        ax.grid(grid)
-        ax.tick_params(bottom=tick, top=tick, left=tick, right=tick,
-                       labelbottom=label, labeltop=label, labelleft=label, labelright=label)
-    
-    ## Used for getting angles for inside 50 arcs.
-    @staticmethod   
-    def create_ellipse_arc(center_x, center_y, semi_major_axis, semi_minor_axis, rotation_angle, start_angle, end_angle):
-        # Generate theta values from start_angle to end_angle
-        theta = np.linspace(start_angle, end_angle, 1000)
-
-        # Compute the x and y coordinates of the arc
-        x = center_x + semi_major_axis * np.cos(theta) * np.cos(rotation_angle) - semi_minor_axis * np.sin(theta) * np.sin(rotation_angle)
-        y = center_y + semi_major_axis * np.cos(theta) * np.sin(rotation_angle) + semi_minor_axis * np.sin(theta) * np.cos(rotation_angle)
-
-        return x, y
-
-    @staticmethod
-    def inside_fifty_intersesct(goal_x, goal_y, boundary_x, boundary_y):
-    
-        distance_to_50 = 100
-        for x, y in zip(boundary_x, boundary_y):
-            x_diff = goal_x - x
-            y_diff = goal_y - y
-            
-            new_distance_to_50 = abs((x_diff**2 + y_diff**2)**0.5 - 50)
-
-            if new_distance_to_50 < distance_to_50:
-                distance_to_50 = new_distance_to_50
-                intersect_x, intersect_y = x, y
-        
-        return intersect_x, intersect_y
-    
-    @staticmethod
-    def get_fifty_angle(goal_x, goal_y, intersect_x, intersect_y):
-    
-        return np.arctan((intersect_y - goal_y) / (intersect_x - goal_x))
         
     
