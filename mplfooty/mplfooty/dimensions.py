@@ -73,11 +73,26 @@ class BaseDims:
                                           theta1=180, theta2=360)
         
         vertices = bottom_boundary_arc.get_verts()
-        distance_to_50 = [abs((((v[0]-self.left)**2 + (v[1]-0)**2)**0.5)-50) for v in vertices]
-        closest_vertex_to_50 = vertices[distance_to_50.index(min(distance_to_50))]
+        interpolated_array = self.interpolate_points(vertices, 10)
+        distance_to_50 = [abs((((v[0]-self.left)**2 + (v[1]-0)**2)**0.5)-50) for v in interpolated_array]
+        closest_vertex_to_50 = interpolated_array[distance_to_50.index(min(distance_to_50))]
 
-        self.inside_50_angle = abs(np.arctan((closest_vertex_to_50[1] - 0) / (closest_vertex_to_50[0] - self.left)) * (180 / np.pi)) + 1
+        self.inside_50_angle = abs(np.arctan((closest_vertex_to_50[1] - 0) / (closest_vertex_to_50[0] - self.left)) * (180 / np.pi))
+
+    @staticmethod
+    def interpolate_points(vertices, num_points):
+        interpolated_points = []
         
+        for i in range(len(vertices) - 1):
+            start_point = vertices[i]
+            end_point = vertices[i + 1]
+            
+            for j in range(num_points):
+                t = float(j) / (num_points + 1)
+                interpolated_point = (1 - t) * start_point + t * end_point
+                interpolated_points.append(interpolated_point)
+        
+        return np.array(interpolated_points)
         
 @dataclass
 class VariableCentreDims(BaseDims):
