@@ -17,12 +17,12 @@ class BasePitch(ABC):
     ----------
     half : bool, default False
         Whether to display half of the pitch.
-    pitch_color : any Matplotlib color, default None
-        The background color for each Matplotlib axis.
+    pitch_colour : any Matplotlib colour, default None
+        The background colour for each Matplotlib axis.
          If None, defaults to rcParams["axes.facecolor"].
         To remove the background set to "None" or 'None'.
-    line_color : any Matplotlib color, default None
-        The line color for the pitch markings. If None, defaults to rcParams["grid.color"].
+    line_colour : any Matplotlib colour, default None
+        The line colour for the pitch markings. If None, defaults to rcParams["grid.color"].
     line_alpha : float, default 1
         The transparency of the pitch and the markings.
     linewidth : float, default 2
@@ -247,6 +247,7 @@ class BasePitch(ABC):
     def _draw_ax(self, ax):
         """ Defines the axes and draw AFL pitch markings & goals. """
         self._set_axes(ax)
+        self._set_background(ax)
         self._draw_pitch_markings(ax)
         self._draw_goals(ax)
         
@@ -259,6 +260,9 @@ class BasePitch(ABC):
         ax.set_xlim(self.extent[0], self.extent[1])
         ax.set_ylim(self.extent[2], self.extent[3])
         ax.set_aspect(self.dim.aspect)
+        
+    def _set_background(self, ax):
+        ax.set_facecolor(self.pitch_colour)
                
     def _draw_pitch_markings(self, ax):
         """ Draw all lines on the pitch. """
