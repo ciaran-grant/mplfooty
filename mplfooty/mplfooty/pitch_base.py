@@ -272,13 +272,19 @@ class BasePitch(ABC):
         
     def _draw_boundary(self, ax):
         # Top Pitch Boundary
+        top_theta_start = 0
+        if self.vertical:
+            top_theta_start = 180
+        top_theta_end = top_theta_start + 180
         self._draw_arc(ax, x=0, y=self.dim.behind_top, 
                        width=self.pitch_length, height = self.dim.boundary_width,
-                       theta1=0, theta2=180, **self.arc_properties)
+                       theta1=top_theta_start, theta2=top_theta_end, **self.arc_properties)
         # Bottom Pitch Boundary
+        bottom_theta_start = top_theta_end
+        bottom_theta_end = bottom_theta_start + 180
         self._draw_arc(ax, x=0, y=self.dim.behind_bottom, 
                        width=self.pitch_length, height = self.dim.boundary_width,
-                       theta1=180, theta2=360, **self.arc_properties)
+                       theta1=bottom_theta_start, theta2=bottom_theta_end, **self.arc_properties)
         
     def _draw_inside_50(self, ax):
         # Left Inside 50
