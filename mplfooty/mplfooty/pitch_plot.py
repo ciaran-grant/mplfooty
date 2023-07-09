@@ -135,19 +135,31 @@ class BasePitchPlot(BasePitch):
         kde = sns.kdeplot(x=x, y=y, ax=ax, **kwargs)
         
         # Clip to pitch boundary
-        top_boundary_arc = Arc((0, self.dim.behind_top), 
+        top_theta_start = 0
+        top_boundary_y = self.dim.behind_top
+        bottom_boundary_y = self.dim.behind_bottom
+        if self.vertical:
+            top_theta_start = 180
+            top_boundary_y = self.dim.behind_bottom
+            bottom_boundary_y = self.dim.behind_top
+        top_theta_end = top_theta_start + 180
+        top_boundary_arc = Arc((0, top_boundary_y), 
                                         width = self.dim.pitch_length, 
                                         height = self.dim.boundary_width, 
-                                        theta1=0, theta2=180
+                                        theta1=top_theta_start, theta2=top_theta_end
                                         )
+        top_vertices = self._reverse_vertices_if_vertical(top_boundary_arc.get_verts()[:-1])
 
-        bottom_boundary_arc = Arc((0, self.dim.behind_bottom), 
+        bottom_theta_start = top_theta_end
+        bottom_theta_end = bottom_theta_start + 180
+        bottom_boundary_arc = Arc((0, bottom_boundary_y), 
                                     width = self.dim.pitch_length, 
                                     height = self.dim.boundary_width, 
-                                    theta1=180, theta2=360
+                                    theta1=bottom_theta_start, theta2=bottom_theta_end
                                     )
+        bottom_vertices = self._reverse_vertices_if_vertical(bottom_boundary_arc.get_verts()[:-1])
 
-        pitch_boundary_vertices = np.concatenate([top_boundary_arc.get_verts()[:-1], bottom_boundary_arc.get_verts()[:-1]])
+        pitch_boundary_vertices = np.concatenate([top_vertices, bottom_vertices])
 
         A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1)
         ax.add_patch(A)
@@ -212,19 +224,31 @@ class BasePitchPlot(BasePitch):
         hexbin = ax.hexbin(x, y, mincnt = mincnt, gridsize=gridsize, extent=extent, **kwargs)
 
         # Clip to pitch boundary
-        top_boundary_arc = Arc((0, self.dim.behind_top), 
+        top_theta_start = 0
+        top_boundary_y = self.dim.behind_top
+        bottom_boundary_y = self.dim.behind_bottom
+        if self.vertical:
+            top_theta_start = 180
+            top_boundary_y = self.dim.behind_bottom
+            bottom_boundary_y = self.dim.behind_top
+        top_theta_end = top_theta_start + 180
+        top_boundary_arc = Arc((0, top_boundary_y), 
                                         width = self.dim.pitch_length, 
                                         height = self.dim.boundary_width, 
-                                        theta1=0, theta2=180
+                                        theta1=top_theta_start, theta2=top_theta_end
                                         )
+        top_vertices = self._reverse_vertices_if_vertical(top_boundary_arc.get_verts()[:-1])
 
-        bottom_boundary_arc = Arc((0, self.dim.behind_bottom), 
+        bottom_theta_start = top_theta_end
+        bottom_theta_end = bottom_theta_start + 180
+        bottom_boundary_arc = Arc((0, bottom_boundary_y), 
                                     width = self.dim.pitch_length, 
                                     height = self.dim.boundary_width, 
-                                    theta1=180, theta2=360
+                                    theta1=bottom_theta_start, theta2=bottom_theta_end
                                     )
+        bottom_vertices = self._reverse_vertices_if_vertical(bottom_boundary_arc.get_verts()[:-1])
 
-        pitch_boundary_vertices = np.concatenate([top_boundary_arc.get_verts()[:-1], bottom_boundary_arc.get_verts()[:-1]])
+        pitch_boundary_vertices = np.concatenate([top_vertices, bottom_vertices])
 
         A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1)
         ax.add_patch(A)
@@ -271,21 +295,33 @@ class BasePitchPlot(BasePitch):
             patch_list.append(polygon)
             ax.add_patch(polygon)
             
-        # Clip to pitch boundary 
-        top_boundary_arc = Arc((0, self.dim.behind_top), 
-                                width = self.dim.pitch_length, 
-                                height = self.dim.boundary_width, 
-                                theta1=0, theta2=180
-                                )
+        # Clip to pitch boundary
+        top_theta_start = 0
+        top_boundary_y = self.dim.behind_top
+        bottom_boundary_y = self.dim.behind_bottom
+        if self.vertical:
+            top_theta_start = 180
+            top_boundary_y = self.dim.behind_bottom
+            bottom_boundary_y = self.dim.behind_top
+        top_theta_end = top_theta_start + 180
+        top_boundary_arc = Arc((0, top_boundary_y), 
+                                        width = self.dim.pitch_length, 
+                                        height = self.dim.boundary_width, 
+                                        theta1=top_theta_start, theta2=top_theta_end
+                                        )
+        top_vertices = self._reverse_vertices_if_vertical(top_boundary_arc.get_verts()[:-1])
 
-        bottom_boundary_arc = Arc((0, self.dim.behind_bottom), 
+        bottom_theta_start = top_theta_end
+        bottom_theta_end = bottom_theta_start + 180
+        bottom_boundary_arc = Arc((0, bottom_boundary_y), 
                                     width = self.dim.pitch_length, 
                                     height = self.dim.boundary_width, 
-                                    theta1=180, theta2=360
+                                    theta1=bottom_theta_start, theta2=bottom_theta_end
                                     )
+        bottom_vertices = self._reverse_vertices_if_vertical(bottom_boundary_arc.get_verts()[:-1])
 
-        pitch_boundary_vertices = np.concatenate([top_boundary_arc.get_verts()[:-1], bottom_boundary_arc.get_verts()[:-1]])
-
+        pitch_boundary_vertices = np.concatenate([top_vertices, bottom_vertices])
+        
         A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1)
         ax.add_patch(A)
         for patch in patch_list:
@@ -339,6 +375,7 @@ class BasePitchPlot(BasePitch):
         verts[:, 0, 0] = x
         verts[:, 0, 1] = y
         verts[:, 1:, :] = np.expand_dims(goal_coordinates, 0)
+                
         return self.polygon(verts, ax=ax, **kwargs)
 
     def annotate(self, text, xy, xytext=None, ax=None, **kwargs):
@@ -497,7 +534,7 @@ class BasePitchPlot(BasePitch):
         inside = np.logical_and(~mask_x_out, ~mask_y_out)
         return _BinnedStatisticResult(statistic, x_grid, y_grid, cx, cy, binnumber, inside)._asdict()
         
-    def heatmap(self, stats, ax=None, vertical=False, **kwargs):
+    def heatmap(self, stats, ax=None, **kwargs):
         """ Utility wrapper around matplotlib.axes.Axes.pcolormesh
         which automatically flips the x_grid and y_grid coordinates if the pitch is vertical.
 
@@ -533,24 +570,36 @@ class BasePitchPlot(BasePitch):
         
         self.validate_ax(ax)
         
-        if vertical:
+        heatmap = ax.pcolormesh(stats['x_grid'], stats['y_grid'], stats['statistic'], **kwargs)
+        if self.vertical:
             heatmap = ax.pcolormesh(stats['y_grid'], stats['x_grid'], stats['statistic'], **kwargs)
         
-        heatmap = ax.pcolormesh(stats['x_grid'], stats['y_grid'], stats['statistic'], **kwargs)
-        
-        top_boundary_arc = Arc((0, self.dim.behind_top), 
+        # Clip to pitch boundary
+        top_theta_start = 0
+        top_boundary_y = self.dim.behind_top
+        bottom_boundary_y = self.dim.behind_bottom
+        if self.vertical:
+            top_theta_start = 180
+            top_boundary_y = self.dim.behind_bottom
+            bottom_boundary_y = self.dim.behind_top
+        top_theta_end = top_theta_start + 180
+        top_boundary_arc = Arc((0, top_boundary_y), 
                                         width = self.dim.pitch_length, 
                                         height = self.dim.boundary_width, 
-                                        theta1=0, theta2=180
+                                        theta1=top_theta_start, theta2=top_theta_end
                                         )
+        top_vertices = self._reverse_vertices_if_vertical(top_boundary_arc.get_verts()[:-1])
 
-        bottom_boundary_arc = Arc((0, self.dim.behind_bottom), 
+        bottom_theta_start = top_theta_end
+        bottom_theta_end = bottom_theta_start + 180
+        bottom_boundary_arc = Arc((0, bottom_boundary_y), 
                                     width = self.dim.pitch_length, 
                                     height = self.dim.boundary_width, 
-                                    theta1=180, theta2=360
+                                    theta1=bottom_theta_start, theta2=bottom_theta_end
                                     )
+        bottom_vertices = self._reverse_vertices_if_vertical(bottom_boundary_arc.get_verts()[:-1])
 
-        pitch_boundary_vertices = np.concatenate([top_boundary_arc.get_verts()[:-1], bottom_boundary_arc.get_verts()[:-1]])
+        pitch_boundary_vertices = np.concatenate([top_vertices, bottom_vertices])
 
         A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1)
         ax.add_patch(A)
