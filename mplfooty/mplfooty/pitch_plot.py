@@ -94,7 +94,45 @@ class BasePitchPlot(BasePitch):
             marker = rcParams['scatter.marker']
         
         return ax.scatter(x, y, marker=marker, **kwargs)
-        
+    
+    def clip_to_pitch_boundary(self, ax, imshow=False, im=None):
+    
+        # Clip to pitch boundary
+        top_theta_start = 0
+        top_boundary_y = self.dim.behind_top
+        bottom_boundary_y = self.dim.behind_bottom
+        if self.vertical:
+            top_theta_start = 180
+            top_boundary_y = self.dim.behind_bottom
+            bottom_boundary_y = self.dim.behind_top
+        top_theta_end = top_theta_start + 180
+        top_boundary_arc = Arc((0, top_boundary_y), 
+                                        width = self.dim.pitch_length, 
+                                        height = self.dim.boundary_width, 
+                                        theta1=top_theta_start, theta2=top_theta_end
+                                        )
+        top_vertices = self._reverse_vertices_if_vertical(top_boundary_arc.get_verts()[:-1])
+
+        bottom_theta_start = top_theta_end
+        bottom_theta_end = bottom_theta_start + 180
+        bottom_boundary_arc = Arc((0, bottom_boundary_y), 
+                                    width = self.dim.pitch_length, 
+                                    height = self.dim.boundary_width, 
+                                    theta1=bottom_theta_start, theta2=bottom_theta_end
+                                    )
+        bottom_vertices = self._reverse_vertices_if_vertical(bottom_boundary_arc.get_verts()[:-1])
+
+        pitch_boundary_vertices = np.concatenate([top_vertices, bottom_vertices])
+
+        if imshow:
+            A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1, transform=ax.transData)
+            im.set_clip_path(A)
+        else:
+            A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1)
+            ax.add_patch(A)
+            for col in ax.collections:
+                col.set_clip_path(A)
+            
     def kdeplot(self, x, y, ax=None, **kwargs):
         """ Utility wrapper around seaborn.kdeplot,
         which automatically flips the x and y coordinates
@@ -134,40 +172,9 @@ class BasePitchPlot(BasePitch):
                         
         kde = sns.kdeplot(x=x, y=y, ax=ax, **kwargs)
         
-        # Clip to pitch boundary
-        top_theta_start = 0
-        top_boundary_y = self.dim.behind_top
-        bottom_boundary_y = self.dim.behind_bottom
-        if self.vertical:
-            top_theta_start = 180
-            top_boundary_y = self.dim.behind_bottom
-            bottom_boundary_y = self.dim.behind_top
-        top_theta_end = top_theta_start + 180
-        top_boundary_arc = Arc((0, top_boundary_y), 
-                                        width = self.dim.pitch_length, 
-                                        height = self.dim.boundary_width, 
-                                        theta1=top_theta_start, theta2=top_theta_end
-                                        )
-        top_vertices = self._reverse_vertices_if_vertical(top_boundary_arc.get_verts()[:-1])
-
-        bottom_theta_start = top_theta_end
-        bottom_theta_end = bottom_theta_start + 180
-        bottom_boundary_arc = Arc((0, bottom_boundary_y), 
-                                    width = self.dim.pitch_length, 
-                                    height = self.dim.boundary_width, 
-                                    theta1=bottom_theta_start, theta2=bottom_theta_end
-                                    )
-        bottom_vertices = self._reverse_vertices_if_vertical(bottom_boundary_arc.get_verts()[:-1])
-
-        pitch_boundary_vertices = np.concatenate([top_vertices, bottom_vertices])
-
-        A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1)
-        ax.add_patch(A)
-        for col in ax.collections:
-            col.set_clip_path(A)
+        self.clip_to_pitch_boundary(ax=ax)
                 
         return kde
-        
         
     def hexbin(self, x, y, ax=None, **kwargs):
         """ Utility wrapper around matplotlib.axes.Axes.hexbin,
@@ -223,37 +230,7 @@ class BasePitchPlot(BasePitch):
         
         hexbin = ax.hexbin(x, y, mincnt = mincnt, gridsize=gridsize, extent=extent, **kwargs)
 
-        # Clip to pitch boundary
-        top_theta_start = 0
-        top_boundary_y = self.dim.behind_top
-        bottom_boundary_y = self.dim.behind_bottom
-        if self.vertical:
-            top_theta_start = 180
-            top_boundary_y = self.dim.behind_bottom
-            bottom_boundary_y = self.dim.behind_top
-        top_theta_end = top_theta_start + 180
-        top_boundary_arc = Arc((0, top_boundary_y), 
-                                        width = self.dim.pitch_length, 
-                                        height = self.dim.boundary_width, 
-                                        theta1=top_theta_start, theta2=top_theta_end
-                                        )
-        top_vertices = self._reverse_vertices_if_vertical(top_boundary_arc.get_verts()[:-1])
-
-        bottom_theta_start = top_theta_end
-        bottom_theta_end = bottom_theta_start + 180
-        bottom_boundary_arc = Arc((0, bottom_boundary_y), 
-                                    width = self.dim.pitch_length, 
-                                    height = self.dim.boundary_width, 
-                                    theta1=bottom_theta_start, theta2=bottom_theta_end
-                                    )
-        bottom_vertices = self._reverse_vertices_if_vertical(bottom_boundary_arc.get_verts()[:-1])
-
-        pitch_boundary_vertices = np.concatenate([top_vertices, bottom_vertices])
-
-        A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1)
-        ax.add_patch(A)
-        for col in ax.collections:
-            col.set_clip_path(A)
+        self.clip_to_pitch_boundary(ax=ax)
 
         return hexbin        
         
@@ -295,37 +272,7 @@ class BasePitchPlot(BasePitch):
             patch_list.append(polygon)
             ax.add_patch(polygon)
             
-        # Clip to pitch boundary
-        top_theta_start = 0
-        top_boundary_y = self.dim.behind_top
-        bottom_boundary_y = self.dim.behind_bottom
-        if self.vertical:
-            top_theta_start = 180
-            top_boundary_y = self.dim.behind_bottom
-            bottom_boundary_y = self.dim.behind_top
-        top_theta_end = top_theta_start + 180
-        top_boundary_arc = Arc((0, top_boundary_y), 
-                                        width = self.dim.pitch_length, 
-                                        height = self.dim.boundary_width, 
-                                        theta1=top_theta_start, theta2=top_theta_end
-                                        )
-        top_vertices = self._reverse_vertices_if_vertical(top_boundary_arc.get_verts()[:-1])
-
-        bottom_theta_start = top_theta_end
-        bottom_theta_end = bottom_theta_start + 180
-        bottom_boundary_arc = Arc((0, bottom_boundary_y), 
-                                    width = self.dim.pitch_length, 
-                                    height = self.dim.boundary_width, 
-                                    theta1=bottom_theta_start, theta2=bottom_theta_end
-                                    )
-        bottom_vertices = self._reverse_vertices_if_vertical(bottom_boundary_arc.get_verts()[:-1])
-
-        pitch_boundary_vertices = np.concatenate([top_vertices, bottom_vertices])
-        
-        A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1)
-        ax.add_patch(A)
-        for patch in patch_list:
-            patch.set_clip_path(A)    
+        self.clip_to_pitch_boundary(ax=ax)
              
         return patch_list
         
@@ -574,38 +521,8 @@ class BasePitchPlot(BasePitch):
         if self.vertical:
             heatmap = ax.pcolormesh(stats['y_grid'], stats['x_grid'], stats['statistic'], **kwargs)
         
-        # Clip to pitch boundary
-        top_theta_start = 0
-        top_boundary_y = self.dim.behind_top
-        bottom_boundary_y = self.dim.behind_bottom
-        if self.vertical:
-            top_theta_start = 180
-            top_boundary_y = self.dim.behind_bottom
-            bottom_boundary_y = self.dim.behind_top
-        top_theta_end = top_theta_start + 180
-        top_boundary_arc = Arc((0, top_boundary_y), 
-                                        width = self.dim.pitch_length, 
-                                        height = self.dim.boundary_width, 
-                                        theta1=top_theta_start, theta2=top_theta_end
-                                        )
-        top_vertices = self._reverse_vertices_if_vertical(top_boundary_arc.get_verts()[:-1])
+        self.clip_to_pitch_boundary(ax=ax)
 
-        bottom_theta_start = top_theta_end
-        bottom_theta_end = bottom_theta_start + 180
-        bottom_boundary_arc = Arc((0, bottom_boundary_y), 
-                                    width = self.dim.pitch_length, 
-                                    height = self.dim.boundary_width, 
-                                    theta1=bottom_theta_start, theta2=bottom_theta_end
-                                    )
-        bottom_vertices = self._reverse_vertices_if_vertical(bottom_boundary_arc.get_verts()[:-1])
-
-        pitch_boundary_vertices = np.concatenate([top_vertices, bottom_vertices])
-
-        A = Polygon(pitch_boundary_vertices, color= "w", zorder=-1)
-        ax.add_patch(A)
-        for col in ax.collections:
-            col.set_clip_path(A)
-        
         return heatmap
       
     def label_heatmap(self, stats, str_format=None, exclude_zeros=False, ax=None, **kwargs):
@@ -757,7 +674,6 @@ class BasePitchPlot(BasePitch):
             ystart, xstart = xstart, ystart
             v, u = u, v
         
-        
         q = ax.quiver(xstart, ystart, u, v, *args, units = units,
                       scale_units = scale_units, angles=angles, scale=scale, width=width,
                       **kwargs)
@@ -827,7 +743,6 @@ class BasePitchPlot(BasePitch):
         distance = (x_dist ** 2 + y_dist ** 2 ) ** 0.5
         
         return angle, distance
-        
     
     def flow(self, xstart, ystart, xend, yend, bins=(5,4),
              arrow_type='same', arrow_length=5, color=None, ax=None, **kwargs):
@@ -888,7 +803,6 @@ class BasePitchPlot(BasePitch):
                      arrow_length=10, bins=(6,4), headwidth=2, headlength=2, headaxislength=2,
                      ax=ax)
         """
-        
         
         self.validate_ax(ax)
         
