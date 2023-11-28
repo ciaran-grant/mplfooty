@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mplfooty"
-version = "0.1.0"
+version = "0.1.1"
 description = "AFL pitch plotting using matplotlib"
 readme = "README.md"
 authors = [{name = "Ciaran Grant", email = "ciaran.grant@hotmail.co.uk"}]
