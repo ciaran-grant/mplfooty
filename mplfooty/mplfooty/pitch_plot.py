@@ -965,6 +965,46 @@ class BasePitchPlot(BasePitch):
         
         return team1, team2
     
+    def contour(self, X, Y, Z, ax, vertical = False, **kwargs):
+        """ Utility wrapper around matplotlib.axes.Axes.contourf
+        which automatically flips the x_grid and y_grid coordinates if the pitch is vertical.
+
+        Parameters
+        ----------
+        X, Y : array-like
+        Z: array-like
+        ax : matplotlib.axes.Axes, default None
+            The axis to plot on.
+        vertical : bool, default False
+            If the orientation is vertical (True), then the code switches the x and y coordinates.
+        **kwargs : All other keyword arguments are passed on to matplotlib.axes.Axes.pcolormesh.
+
+        Returns
+        -------
+        contour : matplotlib.collections.QuadContourSet
+
+        Examples
+        --------
+        >>> from mplfooty import Pitch
+        >>> import numpy as np
+        >>> pitch = Pitch(pitch_width=135, pitch_length=165, line_zorder=2, pitch_colour='black')
+        >>> fig, ax = pitch.draw()
+        >>> X, Y = np.meshgrid(np.linspace(-100, 100, num=100), np.linspace(-100, 100, num=100))
+        >>> Z = np.random.normal(0.5, 0.2, (100,100))
+        >>> pitch.contour(X, Y, Z, cmap="seismic", ax=ax)
+        """
+        
+        self.validate_ax(ax)
+        
+        cfs = ax.contourf(X, Y, Z, **kwargs)
+        if self.vertical:
+            cfs = ax.contourf(Y, X, Z, **kwargs)
+        
+        self.clip_to_pitch_boundary(ax=ax)
+
+        return cfs
+        
+    
     # def lines(self, xstart, ystart, xend, yend, color=None, n_segments=100,
     #           comet=False, transparent = False, alpha_start=0.01, alpha_end=1,
     #           cmap=None, ax=None, **kwargs):
